@@ -11,8 +11,8 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from ..config import AVAILABLE_MODELS, DEFAULT_MODEL
-from .audio import SUPPORTED_FORMATS
+from ..config import AVAILABLE_MODELS, DEFAULT_MODEL, MIN_STREAM_CHUNK_CHARS
+from .audio import PCM_FORMATS, SUPPORTED_FORMATS
 
 
 class TTSRequest(BaseModel):
@@ -86,6 +86,31 @@ class BatchResultItem(BaseModel):
 
 class BatchResponse(BaseModel):
     items: List[BatchResultItem]
+
+
+class RealtimeSessionUpdate(BaseModel):
+    """Session parameters for ``WS /v1/realtime``.
+
+    Used both for the connection's query string and for the ``session.update``
+    event, so a client can either configure everything up front or change
+    voice / speed mid-conversation. Every field is optional; omitted fields
+    keep their current value.
+    """
+
+    voice: Optional[str] = Field(None, description="Voice style name (built-in or imported)")
+    lang: Optional[str] = Field(None, description="Language code or 'na' for fallback")
+    speed: Optional[float] = Field(None, ge=0.7, le=2.0)
+    steps: Optional[int] = Field(None, ge=1, le=100, description="Diffusion steps per chunk")
+    first_chunk_steps: Optional[int] = Field(
+        None,
+        ge=1,
+        le=100,
+        description="Diffusion steps for the first chunk of a response (lower = faster start)",
+    )
+    format: Optional[str] = Field(None, description=f"One of: {', '.join(PCM_FORMATS)}")
+    first_chunk_chars: Optional[int] = Field(None, ge=MIN_STREAM_CHUNK_CHARS, le=1000)
+    max_chunk_chars: Optional[int] = Field(None, ge=MIN_STREAM_CHUNK_CHARS, le=1000)
+    min_chunk_chars: Optional[int] = Field(None, ge=0, le=1000)
 
 
 class StyleInfo(BaseModel):

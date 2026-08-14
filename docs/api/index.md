@@ -22,6 +22,7 @@ wav, duration = tts.synthesize(
 ## Modules
 
 - **[pipeline](pipeline.md)** - High-level TTS interface with automatic model loading and voice style management
+- **[streaming](streaming.md)** - Incremental, clause-by-clause synthesis for realtime voice agents
 - **[core](core.md)** - Core TTS engine classes and data structures
 - **[loader](loader.md)** - Functions for loading models and voice styles
 - **[utils](utils.md)** - Helper functions for text processing and audio utilities

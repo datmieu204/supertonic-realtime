@@ -22,6 +22,7 @@ from fastapi import FastAPI
 from .. import __version__
 from ..config import DEFAULT_MODEL
 from . import styles_store
+from .realtime import register_realtime
 from .routes import MAX_STYLE_IMPORT_BYTES, register_routes
 from .schemas import ErrorDetail, ErrorEnvelope
 
@@ -199,7 +200,8 @@ def create_app(
             "Local HTTP server for Supertonic TTS. Exposes a native /v1/* "
             "namespace plus an OpenAI Audio Speech-compatible alias at "
             "POST /v1/audio/speech so existing clients work with just a "
-            "base-URL change."
+            "base-URL change, and a streaming WS /v1/realtime endpoint for "
+            "voice agents (clause-by-clause PCM with barge-in)."
         ),
         version=__version__,
         lifespan=lifespan,
@@ -223,4 +225,5 @@ def create_app(
     app.add_middleware(StyleImportSizeLimit, max_bytes=MAX_STYLE_IMPORT_BYTES)
 
     register_routes(app)
+    register_realtime(app)
     return app

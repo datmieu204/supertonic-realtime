@@ -82,12 +82,15 @@ def _error(status_code: int, message: str, code: str, type_: str = "invalid_requ
     return JSONResponse(status_code=status_code, content=env.model_dump())
 
 
-def _resolve_voice(state: "ServerState", voice_name: str):
+def resolve_voice(state: "ServerState", voice_name: str):
     """Return a ``Style`` for ``voice_name`` from built-ins or imported custom styles.
 
     Built-ins are checked first; this is structurally equivalent to checking
     custom first because :func:`styles_store.save` refuses to write a custom
     name that collides with the model's built-ins.
+
+    Shared with :mod:`supertonic.server.realtime`, which resolves the voice
+    once per WebSocket session instead of once per request.
     """
     tts = state.tts
     if tts is None:
@@ -112,7 +115,7 @@ def _do_synthesize(
     silence_duration: Optional[float],
 ) -> tuple[np.ndarray, float]:
     """Resolve voice, take the synth lock, run synthesize, return (wav, duration_s)."""
-    style = _resolve_voice(state, voice)
+    style = resolve_voice(state, voice)
     kwargs: dict[str, Any] = {"voice_style": style}
     if speed is not None:
         kwargs["speed"] = speed

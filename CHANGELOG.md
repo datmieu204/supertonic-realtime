@@ -8,6 +8,37 @@ This project broadly follows [Semantic Versioning](https://semver.org/spec/v2.0.
 shifts in `total_steps` and `lang` that are semver-minor in nature but are
 shipping under a patch bump on purpose.**
 
+## [Unreleased]
+
+### Added
+- **Realtime streaming synthesis** (`supertonic.streaming`), for voice agents
+  that need audio before the text is finished. `synthesize_stream()` — also
+  exposed as `TTS.synthesize_stream()` — accepts a string *or* an iterable of
+  fragments (an LLM's streamed tokens) and yields an `AudioChunk` per clause.
+  `ClauseBuffer` does the incremental splitting: it releases text at sentence
+  and phrase boundaries as soon as one is complete, holding back a period only
+  until the next character confirms it is not `3.14`, `Dr.`, or an initial.
+  The vocoder consumes a whole latent, so a clause — not an audio frame — is
+  the smallest unit that can be emitted; the first clause therefore uses a
+  shorter character target and fewer diffusion steps (`first_chunk_steps=4`),
+  since it is the only chunk the listener waits on.
+- **`WS /v1/realtime`** on `supertonic serve`: the client pushes
+  `input.text.delta` events, the server answers with an `audio.chunk` metadata
+  event followed by exactly one binary frame of raw PCM (`pcm_s16le` default,
+  `pcm_f32le` available) at the model's native 44.1 kHz. Supports
+  `session.update` (voice/lang/speed/steps/format/chunk sizing, also settable
+  as query parameters), `speak`, `input.text.done`, `ping`, and `cancel` for
+  barge-in. Cancellation drops queued clauses and discards the chunk currently
+  in the ONNX session — inference cannot be interrupted, so barge-in takes
+  effect within one chunk.
+- `examples/test10_streaming.py` and `examples/test11_realtime_websocket.py`.
+
+### Changed
+- `supertonic.server.routes._resolve_voice` renamed to `resolve_voice`; it is
+  now shared with the realtime endpoint, which resolves a voice once per
+  WebSocket session instead of once per request.
+- `supertonic serve` startup output lists the realtime WebSocket URL.
+
 ## [1.3.1] — 2026-05-18
 
 ### Added

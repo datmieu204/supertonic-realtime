@@ -15,11 +15,19 @@
 
 > **Supertonic-3**: Multilingual synthesis across **31 languages**, plus a `na` fallback for text whose language is unknown or outside the supported set.
 
+> **Fork notice** — this is a fork of
+> [supertone-inc/supertonic-py](https://github.com/supertone-inc/supertonic-py),
+> published on PyPI as **`supertonic-realtime`**, adding clause-by-clause
+> streaming synthesis and a `WS /v1/realtime` WebSocket endpoint for voice
+> agents (see [Realtime streaming](#realtime-streaming-voice-agents)).
+> The import name is unchanged: `import supertonic`.
+
 
 ## Quick Start
 
 ```bash
-pip install supertonic
+pip install supertonic-realtime          # imports as `supertonic`
+pip install "supertonic-realtime[serve]" # + HTTP/WebSocket server
 ```
 
 ### Python
@@ -250,6 +258,68 @@ per process), so batching is about cutting HTTP round-trips and packaging
 related work together, not about parallel speed-up. Any per-item failure
 returns a `400` with `items[<index>]` in the error message — no audio is
 emitted partially.
+
+## Realtime streaming (voice agents)
+
+`synthesize()` returns one array after the whole text is done — too late for a
+voice agent, which wants the first words playing while the rest is still being
+generated. `synthesize_stream()` yields audio **clause by clause** instead, and
+accepts either a string or an iterable of fragments such as an LLM's streamed
+tokens:
+
+```python
+from supertonic import TTS
+
+tts = TTS()
+style = tts.get_voice_style("M1")
+
+for chunk in tts.synthesize_stream(llm_token_stream, style, lang="en"):
+    speaker.write(chunk.wav)     # mono float32, chunk.sample_rate Hz
+```
+
+The first clause uses a shorter character target and fewer diffusion steps
+(`first_chunk_steps=4`), because it is the only chunk the listener waits on —
+every later clause is generated while the previous one plays. Pass a
+`threading.Event` as `cancel` to stop the stream on barge-in.
+
+> **Granularity:** the vocoder runs over a complete latent, so one clause is
+> the smallest unit that can be emitted — this is chunked streaming, not
+> frame-by-frame streaming. Making the first clause short is what keeps
+> time-to-first-audio low.
+
+### WebSocket endpoint
+
+`supertonic serve` also exposes `ws://127.0.0.1:7788/v1/realtime`. The client
+pushes text as it arrives; the server replies with an `audio.chunk` metadata
+event followed by exactly one binary frame of raw PCM.
+
+```
+→ {"type": "input.text.delta", "text": "Your flight leaves at nine forty. "}
+← {"type": "audio.chunk", "index": 0, "text": "Your flight leaves at nine forty.", "bytes": 66150, ...}
+← <binary: 66150 bytes of pcm_s16le>
+→ {"type": "input.text.done"}
+← {"type": "response.done", "chunks": 1, "duration_s": 0.75}
+```
+
+| Client → server | |
+|---|---|
+| `session.update` | Change `voice`, `lang`, `speed`, `steps`, `format`, chunk sizing. Same fields work as query params: `/v1/realtime?voice=F1&lang=en` |
+| `input.text.delta` | Append text; clauses are released as soon as they are complete |
+| `input.text.done` | Flush the tail and finish the response |
+| `speak` | One-shot: delta + done |
+| `cancel` | Barge-in |
+| `ping` | → `pong` |
+
+Audio is headerless PCM (`pcm_s16le` by default, `pcm_f32le` available) at the
+model's native 44.1 kHz — `session.created` reports the rate, and clients
+targeting WebRTC or telephony must resample.
+
+`cancel` drops queued clauses and discards the chunk currently in the ONNX
+session. Inference itself cannot be interrupted, so barge-in takes effect
+within one chunk — another reason the first chunk is kept short.
+
+See `examples/test10_streaming.py` (in-process) and
+`examples/test11_realtime_websocket.py` (WebSocket client with barge-in).
 
 ## Requirements
 

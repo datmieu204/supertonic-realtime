@@ -163,6 +163,7 @@ nav:
     - API Reference:
       - Overview: api/index.md
       - pipeline: api/pipeline.md
+      - streaming: api/streaming.md
       - core: api/core.md
       - loader: api/loader.md
       - utils: api/utils.md

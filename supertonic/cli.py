@@ -264,8 +264,9 @@ def cmd_serve(args):
     app = create_app(model=args.model, cors_origins=cors_origins)
 
     print(f"supertonic serve listening on http://{args.host}:{args.port}")
-    print(f"  docs:  http://{args.host}:{args.port}/docs")
-    print(f"  model: {args.model}")
+    print(f"  docs:     http://{args.host}:{args.port}/docs")
+    print(f"  realtime: ws://{args.host}:{args.port}/v1/realtime")
+    print(f"  model:    {args.model}")
 
     uvicorn.run(
         app,

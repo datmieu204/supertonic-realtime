@@ -3,19 +3,23 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "supertonic"
-version = "1.3.1"
-description = "High-quality Text-to-Speech synthesis with ONNX Runtime"
+# Distribution name on PyPI. The *import* name stays `supertonic`
+# (see [tool.setuptools.packages.find]), so `import supertonic` is unchanged:
+#   pip install supertonic-realtime  →  from supertonic import TTS
+name = "supertonic-realtime"
+version = "1.4.0"
+description = "Supertonic TTS with realtime clause-by-clause streaming and a WebSocket endpoint for voice agents"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
+# Original authors of Supertonic, retained per the MIT license.
 authors = [
     {name = "Yu, Yechan", email = "ato@supertone.ai"},
     {name = "Lee, Juheon", email = "juheon@supertone.ai"},
     {name = "Kim, Hyeongju", email = "hyeongju@supertone.ai"},
 ]
 maintainers = [
-    {name = "Supertone Inc.", email = "contact@supertone.ai"},
+    {name = "datmieu204", email = "datt2505myethuy5@gmail.com"},
 ]
 keywords = [
     "tts",
@@ -31,6 +35,10 @@ keywords = [
     "http-server",
     "fastapi",
     "openai-compatible",
+    "realtime",
+    "streaming",
+    "websocket",
+    "voice-agent",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -62,6 +70,7 @@ dependencies = [
     "numpy>=1.21.0",
     "soundfile>=0.10.0",
     "huggingface-hub>=0.10.0",
+    "fastapi>=0.128.8",
 ]
 
 [project.optional-dependencies]
@@ -89,10 +98,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/supertone-inc/supertonic"
-Repository = "https://github.com/supertone-inc/supertonic-py"
-Documentation = "https://supertone-inc.github.io/supertonic-py"
-Issues = "https://github.com/supertone-inc/supertonic-py/issues"
+Homepage = "https://github.com/datmieu204/supertonic-realtime"
+Repository = "https://github.com/datmieu204/supertonic-realtime"
+Issues = "https://github.com/datmieu204/supertonic-realtime/issues"
+"Upstream project" = "https://github.com/supertone-inc/supertonic-py"
 Demo = "https://huggingface.co/spaces/Supertone/supertonic-3"
 "Model Hub" = "https://huggingface.co/Supertone/supertonic-3"
 

@@ -30,6 +30,20 @@ _FORMATS = {
 
 SUPPORTED_FORMATS = tuple(_FORMATS.keys())
 
+# Raw PCM formats for the realtime WebSocket endpoint. Containerized formats
+# (WAV, FLAC, OGG) carry a header describing the total length, which a stream
+# of independently synthesized clauses does not have — so realtime clients get
+# headerless interleaved samples plus the sample rate from ``session.created``.
+# Mapping: public name → (numpy dtype, bytes per sample).
+_PCM_FORMATS = {
+    "pcm_s16le": ("<i2", 2),
+    "pcm_f32le": ("<f4", 4),
+}
+
+PCM_FORMATS = tuple(_PCM_FORMATS.keys())
+
+DEFAULT_PCM_FORMAT = "pcm_s16le"
+
 
 class UnsupportedAudioFormat(ValueError):
     """Raised when the caller asks for a format we cannot encode."""
@@ -64,6 +78,52 @@ def encode_audio(wav: np.ndarray, sample_rate: int, fmt: str) -> bytes:
     buf = io.BytesIO()
     sf.write(buf, wav, sample_rate, format=sf_format, subtype=subtype)
     return buf.getvalue()
+
+
+def pcm_sample_width(fmt: str) -> int:
+    """Bytes per sample for a raw PCM format."""
+    entry = _PCM_FORMATS.get(fmt)
+    if entry is None:
+        raise UnsupportedAudioFormat(fmt)
+    return entry[1]
+
+
+def encode_pcm(wav: np.ndarray, fmt: str) -> bytes:
+    """Encode a waveform as headerless little-endian PCM.
+
+    Args:
+        wav: ndarray of shape ``(1, num_samples)`` or ``(num_samples,)``.
+        fmt: one of :data:`PCM_FORMATS`.
+
+    Samples are clipped to ``[-1, 1]`` before quantizing; the vocoder can
+    overshoot slightly and wrapping around would be an audible click.
+    """
+    entry = _PCM_FORMATS.get(fmt)
+    if entry is None:
+        raise UnsupportedAudioFormat(fmt)
+    dtype, _ = entry
+
+    mono = np.asarray(wav, dtype=np.float32).reshape(-1)
+    mono = np.clip(mono, -1.0, 1.0)
+    if dtype == "<f4":
+        return mono.astype(dtype, copy=False).tobytes()
+    # 32767 rather than 32768: scaling by 32768 maps +1.0 to a value that
+    # overflows int16 and wraps to -32768.
+    return np.round(mono * 32767.0).astype(dtype).tobytes()
+
+
+def coerce_pcm_format(value: Optional[str]) -> str:
+    """Validate and normalize a realtime ``format`` value.
+
+    ``None`` → :data:`DEFAULT_PCM_FORMAT`. An unsupported value raises
+    :class:`UnsupportedAudioFormat`.
+    """
+    if value is None:
+        return DEFAULT_PCM_FORMAT
+    v = value.lower().strip()
+    if v not in _PCM_FORMATS:
+        raise UnsupportedAudioFormat(value)
+    return v
 
 
 def duration_seconds(wav: np.ndarray, sample_rate: int) -> float:

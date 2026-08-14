@@ -204,6 +204,19 @@ DEFAULT_MAX_CHUNK_LENGTH = 300
 DEFAULT_MAX_CHUNK_LENGTH_KO = 120  # Korean requires shorter chunks
 DEFAULT_SILENCE_DURATION = 0.3  # seconds
 
+# Streaming / realtime synthesis (see `supertonic.streaming`).
+#
+# The vocoder consumes a whole latent at once, so the smallest unit that can
+# be emitted is one text clause — these values trade audio-chunk size against
+# time-to-first-audio. The first clause is deliberately short and synthesized
+# with fewer diffusion steps: it is the only chunk the listener waits on, and
+# every later chunk is generated while the previous one is still playing.
+DEFAULT_FIRST_CHUNK_CHARS = 60
+DEFAULT_STREAM_CHUNK_CHARS = 180
+DEFAULT_MIN_CHUNK_CHARS = 24
+DEFAULT_FIRST_CHUNK_STEPS = 4
+MIN_STREAM_CHUNK_CHARS = 10
+
 # TTS parameters - constraints
 MIN_SPEED = 0.7
 MAX_SPEED = 2.0

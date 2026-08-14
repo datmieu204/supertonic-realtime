@@ -47,13 +47,17 @@ from .config import (
 )
 from .core import Style, UnicodeProcessor
 from .pipeline import TTS
+from .streaming import AudioChunk, ClauseBuffer, synthesize_stream
 
-__version__ = "1.3.1"
+__version__ = "1.4.0"
 
 __all__ = [
     "TTS",
     "Style",
     "UnicodeProcessor",
+    "AudioChunk",
+    "ClauseBuffer",
+    "synthesize_stream",
     "AVAILABLE_LANGUAGES",
     "AVAILABLE_MODELS",
     "DEFAULT_LANGUAGE",

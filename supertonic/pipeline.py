@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Iterable, Iterator, Optional, TYPE_CHECKING, Union
 
 import numpy as np
 
@@ -38,6 +38,9 @@ from .loader import (
     load_voice_style_from_name,
 )
 from .utils import chunk_text
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from .streaming import AudioChunk
 
 logger = logging.getLogger(__name__)
 
@@ -327,6 +330,44 @@ class TTS:
             print(f"Array shape: {wav_cat.shape}")
 
         return wav_cat, dur_cat
+
+    def synthesize_stream(
+        self,
+        text: Union[str, Iterable[str]],
+        voice_style: Style,
+        **kwargs: Any,
+    ) -> Iterator["AudioChunk"]:
+        """Synthesize incrementally, yielding audio clause by clause.
+
+        Use this instead of :meth:`synthesize` when something is listening in
+        realtime: the first clause is emitted as soon as it is ready rather
+        than after the whole text has been synthesized.
+
+        Args:
+            text: A complete string, or an iterable of fragments (e.g. an
+                LLM's streamed deltas).
+            voice_style: Voice style object.
+            **kwargs: Forwarded to :func:`supertonic.streaming.synthesize_stream`
+                (``lang``, ``speed``, ``total_steps``, ``first_chunk_steps``,
+                ``first_chunk_chars``, ``max_chunk_chars``, ``min_chunk_chars``,
+                ``cancel``).
+
+        Yields:
+            :class:`supertonic.streaming.AudioChunk` objects in order.
+
+        Example:
+            ```python
+            tts = TTS()
+            style = tts.get_voice_style("M1")
+            for chunk in tts.synthesize_stream("Hello. How are you?", style, lang="en"):
+                speaker.write(chunk.wav)
+            ```
+        """
+        # Imported lazily: `streaming` imports this module for typing only,
+        # and callers that never stream should not pay for it.
+        from .streaming import synthesize_stream
+
+        return synthesize_stream(self, text, voice_style, **kwargs)
 
     def save_audio(
         self,
