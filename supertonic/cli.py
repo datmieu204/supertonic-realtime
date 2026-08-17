@@ -1,8 +1,4 @@
-"""Command-line interface for Supertonic TTS.
-
-This module provides a command-line interface for easy text-to-speech
-synthesis, batch processing, and model management.
-"""
+#!/usr/bin/env python3
 
 from __future__ import annotations
 

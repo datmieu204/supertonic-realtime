@@ -400,7 +400,7 @@ class _RealtimeSession:
             chunk = await to_thread.run_sync(
                 partial(self._blocking_synth, clause, style, cfg, index)
             )
-        except Exception as e:  # noqa: BLE001 — report and keep the session alive
+        except Exception as e:
             logger.exception("realtime synthesis failed")
             await self._error(f"synthesis failed: {e}", "synthesis_failed", type_="server_error")
             return
@@ -523,12 +523,12 @@ def register_realtime(app: FastAPI) -> None:
         session = _RealtimeSession(ws, state, cfg, style)
         try:
             await session.run()
-        except Exception:  # noqa: BLE001 — never leak a traceback into the socket
+        except Exception:
             logger.exception("realtime session failed")
             with anyio.CancelScope(shield=True):
                 try:
                     await ws.close(code=1011)
-                except Exception:  # noqa: BLE001 - socket already gone
+                except Exception:
                     logger.debug("could not close realtime socket after failure", exc_info=True)
 
     app.include_router(router)

@@ -292,7 +292,7 @@ def register_routes(app: FastAPI) -> None:
             )
         except UnknownVoice as e:
             return _error(400, f"unknown voice {str(e)!r}", "unknown_voice")
-        except Exception as e:  # noqa: BLE001 — surface as 500 with code
+        except Exception as e:
             logger.exception("synthesis failed")
             return _error(500, f"synthesis failed: {e}", "synthesis_failed", type_="server_error")
         return _audio_response(state, wav, fmt, dur)
@@ -344,7 +344,7 @@ def register_routes(app: FastAPI) -> None:
             )
         except UnknownVoice as e:
             return _error(400, f"unknown voice {str(e)!r}", "unknown_voice")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception("synthesis failed")
             return _error(500, f"synthesis failed: {e}", "synthesis_failed", type_="server_error")
         return _audio_response(state, wav, fmt, dur)
@@ -402,7 +402,7 @@ def register_routes(app: FastAPI) -> None:
                     f"items[{idx}]: unknown voice {str(e)!r}",
                     "unknown_voice",
                 )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.exception("batch item %d synthesis failed", idx)
                 return _error(
                     500,
