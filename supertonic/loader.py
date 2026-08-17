@@ -146,7 +146,7 @@ def download_model(model_dir: Union[Path, str], model_name: Optional[str] = None
             logger.info("Cleaning up temporary files...")
             try:
                 shutil.rmtree(temp_dir)
-            except Exception as cleanup_error:
+            except Exception as cleanup_error:  # noqa: BLE001 - cleanup must be best-effort
                 logger.warning(f"Failed to clean up temporary files: {cleanup_error}")
 
         raise RuntimeError(

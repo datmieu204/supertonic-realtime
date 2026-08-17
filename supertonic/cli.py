@@ -95,7 +95,7 @@ def cmd_say(args):
         sd.wait()  # Wait until audio is finished playing
         print("   -> Audio played")
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - CLI should surface any runtime failure to the user
         print(f"❌ Error: {e}")
         if args.verbose:
             logger.exception("TTS playback failed with exception:")
@@ -173,7 +173,7 @@ def cmd_tts(args):
         tts.save_audio(wav, args.output)
         print(f"   -> Audio saved to {args.output}")
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - CLI should surface any runtime failure to the user
         print(f"❌ Error: {e}")
         if args.verbose:
             logger.exception("TTS generation failed with exception:")
@@ -189,7 +189,7 @@ def cmd_list_voices(args):
         print(f"📢 Available voice styles ({len(styles)}):\n")
         for style in styles:
             print(f"  • {style}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - CLI should surface any runtime failure to the user
         print(f"❌ Error: {e}")
         sys.exit(1)
 
@@ -203,7 +203,7 @@ def cmd_info(args):
         print(f"Model directory: {tts.model_dir}")
         print(f"Sample rate: {tts.sample_rate} Hz")
         print(f"\nAvailable voice styles: {', '.join(tts.voice_style_names)}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - CLI should surface any runtime failure to the user
         print(f"❌ Error: {e}")
         sys.exit(1)
 
@@ -218,7 +218,7 @@ def cmd_download(args):
         cache_dir = get_cache_dir()
         download_model(cache_dir)
         print(f"✅ Model downloaded to: {cache_dir}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - CLI should surface download failures to the user
         print(f"❌ Download failed: {e}")
         sys.exit(1)
 
@@ -546,7 +546,7 @@ def main():
     except KeyboardInterrupt:
         print("\n⚠️  Interrupted by user")
         sys.exit(130)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - top-level CLI guard for user-friendly error output
         print(f"❌ Error: {e}")
         sys.exit(1)
 

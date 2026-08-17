@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Core TTS engine and text processing components.
 
 This module contains the main Supertonic TTS engine, text processor,
@@ -266,7 +268,7 @@ class UnicodeProcessor:
         # Apply NFKD normalization with exception handling
         try:
             text = normalize("NFKD", text)
-        except Exception as e:
+        except TypeError as e:
             logger.warning(f"Unicode normalization failed: {e}. Continuing without normalization.")
 
         text = self._remove_emojis(text)
